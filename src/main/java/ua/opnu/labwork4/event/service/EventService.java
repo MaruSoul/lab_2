@@ -15,6 +15,7 @@ import ua.opnu.labwork4.participant.repository.ParticipantRepository;
 import ua.opnu.labwork4.registration.repository.RegistrationRepository;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -123,9 +124,21 @@ public class EventService {
     }
 
     public List<Event> advancedSearch(String query, String dateStr, String location) {
-        LocalDate date = (dateStr != null && !dateStr.isBlank()) ? LocalDate.parse(dateStr) : null;
         query = query == null ? "" : query;
         location = location == null ? "" : location;
+
+        // дата - необов'язковий фільтр: якщо її не передано, шукаємо лише за назвою та локацією.
+        // Spring Data перетворює null-параметр на умову "date IS NULL", тому передавати null у запит з датою не можна
+        if (dateStr == null || dateStr.isBlank()) {
+            return eventRepository.findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCase(query, location);
+        }
+
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateStr);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Некоректний формат дати: '" + dateStr + "'. Очікується формат YYYY-MM-DD (наприклад, 2026-04-17)");
+        }
         return eventRepository.findByTitleContainingIgnoreCaseAndDateAndLocationContainingIgnoreCase(query, date, location);
     }
 }

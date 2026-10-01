@@ -25,6 +25,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     // /search/events/advanced?query=&date=&location=
     List<Event> findByTitleContainingIgnoreCaseAndDateAndLocationContainingIgnoreCase(String title, LocalDate date, String location);
 
+    // /search/events/advanced?query=&location= (без фільтра за датою)
+    List<Event> findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCase(String title, String location);
+
     long countByDateAfter(LocalDate date);
     long countByDateBefore(LocalDate date);
 }
